@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Cabinas</title>
+    <style>
+        /* Estilo general */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none; /* Oculto por defecto */
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px_15px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Encabezados y Títulos */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            font-size: 20px;
+        }
+
+        /* Formularios */
+        .form-container {
+            max-width: 450px;
+            margin: 20px auto;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="password"], input[type="number"], select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #e74c3c;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button.secondary {
+            background-color: #3498db;
+        }
+        button.secondary:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Cierre Mensual */
+        #monthly-closing-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        .financial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .financial-grid label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .financial-grid input {
+            margin-bottom: 5px;
+        }
+        .financial-summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            padding: 8px 0;
+        }
+        .summary-item strong {
+             color: #34495e;
+        }
+        .profit {
+            font-weight: bold;
+            color: #27ae60 !important;
+        }
+        .loss {
+            font-weight: bold;
+            color: #e74c3c !important;
+        }
+
+        /* Barra de Navegación / Cabecera */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-info span {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .logout-btn {
+            text-decoration: none;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Tarjetas del Dashboard */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #e74c3c;
+        }
+        .card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        .card.alert {
+            border-left-color: #f39c12;
+            background-color: #fef5e7;
+        }
+        .card.alert .value {
+            color: #f39c12;
+        }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e8e8e8;
+        }
+
+        /* Mensajes de feedback */
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            display: none; /* Oculto por defecto */
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- PÁGINA DE LOGIN -->
+        <div id="login-page" class="page">
+            <h1>Control de Cabinas</h1>
+            <div class="form-container">
+                <form id="login-form">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" id="usuario" name="usuario" required value="administrador">
+                    
+                    <label for="clave">Contraseña</label>
+                    <input type="password" id="clave" name="clave" required value="admin123">
+                    
+                    <div id="login-error" class="message error"></div>
+
+                    <button type="submit">Ingresar</button>
+                </form>
+                <p style="text-align:center; font-size:12px; color:#777; margin-top:20px;">
+                    <b>Admin:</b> administrador / admin123 <br>
+                    <b>Operador:</b> operador / operador123
+                </p>
+            </div>
+        </div>
+
+        <!-- PANEL DEL OPERADOR -->
+        <div id="operador-dashboard" class="page">
+            <div class="header">
+                <h1>Panel del Operador</h1>
+                <div class="header-info">
+                    Usuario: <span id="op-username"></span>
+                    <a href="#" class="logout-btn">Salir</a>
+                </div>
+            </div>
+            
+            <div id="op-message" class="message"></div>
+
+            <h2>Registrar Conteo de Fotos</h2>
+            <div id="op-form-container" class="form-container">
+                <!-- Contenido dinámico aquí -->
+            </div>
+            
+            <div class="form-container" style="margin-top:0;">
+                 <button id="btn-op-show-cambiar-rollo" class="secondary">Cambiar Rollo</button>
+            </div>
+        </div>
+
+        <!-- PANEL DEL ADMINISTRADOR -->
+        <div id="admin-dashboard" class="page">
+            <div class="header">
+                <h1>Panel de Administración</h1>
+                <div class="header-info">
+                    Usuario: <span id="admin-username"></span>
+                    <a href="#" class="logout-btn">Salir</a>
+                </div>
+            </div>
+
+            <h2>Dashboard Principal</h2>
+            <div id="admin-cards" class="dashboard-cards"></div>
+
+            <h2>Gestión de Cabina "Temperley"</h2>
+            <div id="admin-rollo-en-uso"></div>
+            <button id="btn-admin-show-cambiar-rollo" style="margin-top: 15px;">Cambiar Rollo</button>
+            
+            <h2>Inventario de Rollos</h2>
+            <div id="admin-rollos-stock"></div>
+            <button id="btn-show-nuevo-rollo" style="margin-top: 15px;" class="secondary">Añadir Nuevo Rollo al Stock</button>
+            
+            <h2>Configuración</h2>
+            <div id="admin-config-form" class="form-container" style="margin-left:0;"></div>
+            
+            <!-- NUEVA SECCIÓN DE CIERRE MENSUAL -->
+            <h2>Cierre Mensual y Ganancias</h2>
+            <div id="monthly-closing-section">
+                <div id="closing-message" class="message"></div>
+                <label for="month-selector">Seleccionar Mes:</label>
+                <select id="month-selector"></select>
+                <div id="financial-details-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA CAMBIAR ROLLO -->
+    <div id="modal-cambiar-rollo" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Cambiar Rollo</h2>
+            <form id="form-cambiar-rollo">
+                <p>Rollo actual: <strong id="modal-rollo-actual-nombre"></strong></p>
+                <label for="fotos-finales-saliente">Fotos restantes del rollo que retiras:</label>
+                <input type="number" id="fotos-finales-saliente" required>
+                
+                <label for="select-rollo-entrante">Selecciona el nuevo rollo a instalar:</label>
+                <select id="select-rollo-entrante" required></select>
+                
+                <button type="submit">Confirmar Cambio</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PARA NUEVO ROLLO -->
+    <div id="modal-nuevo-rollo" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Añadir Rollo al Stock</h2>
+            <form id="form-nuevo-rollo">
+                <label for="nuevo-rollo-nombre">Nombre del Rollo (Ej: Rollo Nuevo #3)</label>
+                <input type="text" id="nuevo-rollo-nombre" required>
+                
+                <label for="nuevo-rollo-fotos">Fotos Iniciales (usualmente 320)</label>
+                <input type="number" id="nuevo-rollo-fotos" value="320" required>
+
+                <label for="nuevo-rollo-obs">Observaciones (opcional)</label>
+                <input type="text" id="nuevo-rollo-obs">
+                
+                <button type="submit">Añadir al Stock</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- SIMULACIÓN DE BASE DE DATOS Y ESTADO DE SESIÓN ---
+    const DB_KEY = 'photoBoothDB';
+    const SESSION_KEY = 'photoBoothSession';
+    let db;
+
+    // --- ELEMENTOS DEL DOM ---
+    const pages = {
+        login: document.getElementById('login-page'),
+        operador: document.getElementById('operador-dashboard'),
+        admin: document.getElementById('admin-dashboard')
+    };
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const logoutBtns = document.querySelectorAll('.logout-btn');
+    
+    // Modals
+    const modals = {
+        cambiarRollo: document.getElementById('modal-cambiar-rollo'),
+        nuevoRollo: document.getElementById('modal-nuevo-rollo')
+    };
+    
+    // --- LÓGICA DE LA APLICACIÓN ---
+
+    function setupDatabase() {
+        if (!localStorage.getItem(DB_KEY)) {
+            const initialDB = {
+                users: [
+                    { id: 1, usuario: 'administrador', clave: 'hash1', rol: 'administrador' },
+                    { id: 2, usuario: 'operador', clave: 'hash2', rol: 'operador' }
+                ],
+                rolls: [
+                    { id: 1, nombre: 'Rollo Inicial #A', fotos_iniciales: 320, fotos_restantes: 150, estado: 'en_uso', observaciones: 'Rollo de demostración' },
+                    { id: 2, nombre: 'Rollo Nuevo #1', fotos_iniciales: 320, fotos_restantes: 320, estado: 'stock', observaciones: '' },
+                    { id: 3, nombre: 'Rollo Nuevo #2', fotos_iniciales: 320, fotos_restantes: 320, estado: 'stock', observaciones: '' }
+                ],
+                operations: [
+                    // Operación de ejemplo en el mes anterior
+                    { id: 0, id_usuario: 2, id_rollo: 1, tipo_operacion: 'conteo', fotos_usadas: 20, precio_foto_momento: 2800, fecha: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString() },
+                    // Operación de ejemplo en el mes actual para testing
+                    { id: 1, id_usuario: 2, id_rollo: 1, tipo_operacion: 'conteo', fotos_usadas: 50, precio_foto_momento: 3000, fecha: new Date().toISOString() }
+                ],
+                config: {
+                    precio_por_foto: 3000
+                },
+                monthlyClosings: {},
+                nextRollId: 4,
+                nextOperationId: 2,
+            };
+            localStorage.setItem(DB_KEY, JSON.stringify(initialDB));
+        }
+        db = JSON.parse(localStorage.getItem(DB_KEY));
+    }
+
+    function saveDB() {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    function showPage(pageName) {
+        Object.values(pages).forEach(page => page.style.display = 'none');
+        if (pages[pageName]) {
+            pages[pageName].style.display = 'block';
+        }
+    }
+    
+    function verifyPassword(password, hash) {
+        if ((hash === 'hash1' && password === 'admin123') || (hash === 'hash2' && password === 'operador123')) return true;
+        return false;
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const username = loginForm.usuario.value;
+        const password = loginForm.clave.value;
+        const user = db.users.find(u => u.usuario === username);
+
+        if (user && verifyPassword(password, user.clave)) {
+            const session = { loggedin: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+            navigateToDashboard(user.rol);
+        } else {
+            loginError.textContent = 'Usuario o contraseña incorrectos.';
+            loginError.style.display = 'block';
+        }
+    }
+    
+    function navigateToDashboard(rol) {
+        if (rol === 'administrador') {
+            renderAdminDashboard();
+            showPage('admin');
+        } else {
+            renderOperatorDashboard();
+            showPage('operador');
+        }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem(SESSION_KEY);
+        loginForm.reset();
+        loginError.style.display = 'none';
+        showPage('login');
+    }
+
+    // --- LÓGICA DEL PANEL DE OPERADOR ---
+
+    function renderOperatorDashboard() {
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        document.getElementById('op-username').textContent = session.user.usuario;
+        
+        const container = document.getElementById('op-form-container');
+        const rollInUse = db.rolls.find(r => r.estado === 'en_uso');
+
+        if (rollInUse) {
+            container.innerHTML = `
+                <p>El rollo actual es <strong>${rollInUse.nombre}</strong>.</p>
+                <p>Actualmente tiene <strong>${rollInUse.fotos_restantes}</strong> fotos restantes.</p>
+                <form id="op-update-form">
+                    <label for="fotos_restantes">Ingresa el nuevo número de fotos que quedan:</label>
+                    <input type="number" id="fotos_restantes" name="fotos_restantes" required min="0" max="${rollInUse.fotos_restantes}">
+                    <button type="submit">Actualizar Conteo</button>
+                </form>
+            `;
+            document.getElementById('op-update-form').addEventListener('submit', handleOperatorUpdate);
+            document.getElementById('btn-op-show-cambiar-rollo').style.display = 'block';
+        } else {
+            container.innerHTML = `<p class="message error" style="display:block;">No hay ningún rollo activo. Un administrador debe asignar uno.</p>`;
+            document.getElementById('btn-op-show-cambiar-rollo').style.display = 'none';
+        }
+    }
+    
+    function handleOperatorUpdate(e) {
+        e.preventDefault();
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        const rollInUse = db.rolls.find(r => r.estado === 'en_uso');
+        const newCount = parseInt(e.target.fotos_restantes.value);
+        
+        if (newCount < 0 || newCount > rollInUse.fotos_restantes) {
+            showMessage('op-message', 'Error: El número de fotos es inválido.', 'error');
+            return;
+        }
+
+        const photosUsed = rollInUse.fotos_restantes - newCount;
+
+        if (photosUsed > 0) {
+            db.operations.push({
+                id: db.nextOperationId++,
+                id_usuario: session.user.id,
+                id_rollo: rollInUse.id,
+                tipo_operacion: 'conteo',
+                fotos_usadas: photosUsed,
+                precio_foto_momento: db.config.precio_por_foto,
+                fecha: new Date().toISOString()
+            });
+        }
+        
+        rollInUse.fotos_restantes = newCount;
+        saveDB();
+        
+        showMessage('op-message', `¡Conteo actualizado! Se registraron ${photosUsed} fotos usadas.`, 'success');
+        renderOperatorDashboard();
+    }
+
+    // --- LÓGICA DEL PANEL DE ADMINISTRADOR ---
+
+    function renderAdminDashboard() {
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        document.getElementById('admin-username').textContent = session.user.usuario;
+        renderAdminCards();
+        renderAdminRollInUse();
+        renderAdminStockTable();
+        renderAdminConfigForm();
+        renderMonthlyClosingSection();
+    }
+
+    function renderAdminCards() {
+        const cardsContainer = document.getElementById('admin-cards');
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const monthlyOps = db.operations.filter(op => op.fecha.startsWith(currentMonth));
+        const photosMonth = monthlyOps.reduce((sum, op) => sum + op.fotos_usadas, 0);
+        const revenueMonth = monthlyOps.reduce((sum, op) => sum + (op.fotos_usadas * op.precio_foto_momento), 0);
+        const stockPhotos = db.rolls.filter(r => r.estado === 'stock').reduce((sum, r) => sum + r.fotos_restantes, 0);
+        const stockAlert = stockPhotos < 800;
+
+        cardsContainer.innerHTML = `
+            <div class="card">
+                <h3>Fotos Realizadas (Mes Actual)</h3>
+                <p class="value">${photosMonth}</p>
+            </div>
+            <div class="card">
+                <h3>Recaudación Estimada (Mes Actual)</h3>
+                <p class="value">$${revenueMonth.toLocaleString('es-AR')}</p>
+            </div>
+            <div class="card ${stockAlert ? 'alert' : ''}">
+                <h3>Fotos en Stock</h3>
+                <p class="value">${stockPhotos}</p>
+                ${stockAlert ? '<small>¡Nivel de stock bajo! (Menos de 800)</small>' : ''}
+            </div>
+        `;
+    }
+
+    function renderAdminRollInUse() {
+        const container = document.getElementById('admin-rollo-en-uso');
+        const rollInUse = db.rolls.find(r => r.estado === 'en_uso');
+        if (rollInUse) {
+            container.innerHTML = `
+                <table>
+                    <thead><tr><th>Nombre</th><th>Fotos Restantes</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>${rollInUse.nombre}</td>
+                            <td>${rollInUse.fotos_restantes} / ${rollInUse.fotos_iniciales}</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+        } else {
+            container.innerHTML = `<p class="message error" style="display:block;">No hay ningún rollo en uso.</p>`;
+        }
+    }
+
+    function renderAdminStockTable() {
+        const container = document.getElementById('admin-rollos-stock');
+        const stockRolls = db.rolls.filter(r => r.estado === 'stock');
+        if (stockRolls.length > 0) {
+            let tableHTML = `<table><thead><tr><th>Nombre</th><th>Fotos Restantes</th><th>Observaciones</th></tr></thead><tbody>`;
+            stockRolls.forEach(roll => {
+                tableHTML += `<tr><td>${roll.nombre}</td><td>${roll.fotos_restantes}</td><td>${roll.observaciones}</td></tr>`;
+            });
+            container.innerHTML = tableHTML + `</tbody></table>`;
+        } else {
+            container.innerHTML = `<p>No hay rollos en el inventario de stock.</p>`;
+        }
+    }
+    
+    function renderAdminConfigForm() {
+        const container = document.getElementById('admin-config-form');
+        container.innerHTML = `
+            <form id="config-form">
+                <label for="precio_foto">Precio actual por foto:</label>
+                <input type="number" id="precio_foto" value="${db.config.precio_por_foto}" step="50">
+                <button type="submit">Guardar Precio</button>
+            </form>`;
+        document.getElementById('config-form').addEventListener('submit', handleConfigUpdate);
+    }
+    
+    function handleConfigUpdate(e) {
+        e.preventDefault();
+        const newPrice = parseFloat(document.getElementById('precio_foto').value);
+        if (!isNaN(newPrice) && newPrice > 0) {
+            db.config.precio_por_foto = newPrice;
+            saveDB();
+            showMessage('closing-message', 'Precio actualizado con éxito.', 'success');
+        } else {
+            showMessage('closing-message', 'Por favor, ingresa un precio válido.', 'error');
+        }
+    }
+    
+    // --- CIERRE MENSUAL ---
+
+    function renderMonthlyClosingSection() {
+        const selector = document.getElementById('month-selector');
+        const months = [...new Set(db.operations.map(op => op.fecha.slice(0, 7)))];
+        const currentMonthStr = new Date().toISOString().slice(0, 7);
+        if (!months.includes(currentMonthStr)) {
+            months.push(currentMonthStr);
+        }
+        months.sort().reverse();
+
+        const selectedValue = selector.value;
+        selector.innerHTML = '';
+        months.forEach(monthStr => {
+            const option = document.createElement('option');
+            option.value = monthStr;
+            const [year, month] = monthStr.split('-');
+            option.textContent = new Date(year, month - 1).toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+            selector.appendChild(option);
+        });
+        selector.value = selectedValue || months[0];
+
+        selector.addEventListener('change', () => renderFinancialDetails(selector.value));
+        renderFinancialDetails(selector.value);
+    }
+
+    function renderFinancialDetails(monthYear) {
+        const container = document.getElementById('financial-details-container');
+        const closingData = db.monthlyClosings[monthYear] || { actualCash: 0, expenses: { alquiler: 0, insumos: 0, viajes: 0, seguros: 0, extraordinario: 0 } };
+        
+        container.innerHTML = `
+            <form id="financial-form" data-month="${monthYear}">
+                <div class="financial-grid">
+                    <div>
+                        <label>Recaudación Estimada</label>
+                        <input type="text" id="estimated-revenue" disabled>
+                    </div>
+                    <div>
+                        <label for="actual-cash">Dinero Real Recaudado</label>
+                        <input type="number" id="actual-cash" value="${closingData.actualCash}" step="100">
+                    </div>
+                    <div>
+                        <label>Diferencia</label>
+                        <input type="text" id="revenue-difference" disabled>
+                    </div>
+                </div>
+                <h3>Gastos del Mes</h3>
+                <div class="financial-grid">
+                    <div><label for="exp-alquiler">Alquiler</label><input type="number" class="expense-input" id="exp-alquiler" value="${closingData.expenses.alquiler}" step="100"></div>
+                    <div><label for="exp-insumos">Insumos</label><input type="number" class="expense-input" id="exp-insumos" value="${closingData.expenses.insumos}" step="100"></div>
+                    <div><label for="exp-viajes">Viajes</label><input type="number" class="expense-input" id="exp-viajes" value="${closingData.expenses.viajes}" step="100"></div>
+                    <div><label for="exp-seguros">Seguros</label><input type="number" class="expense-input" id="exp-seguros" value="${closingData.expenses.seguros}" step="100"></div>
+                    <div><label for="exp-extraordinario">Gasto Extraordinario</label><input type="number" class="expense-input" id="exp-extraordinario" value="${closingData.expenses.extraordinario}" step="100"></div>
+                </div>
+                <button type="submit" style="margin-top: 15px;">Guardar Cierre del Mes</button>
+            </form>
+            <div class="financial-summary">
+                <div class="summary-item"><span>Total de Gastos:</span> <strong id="summary-total-expenses"></strong></div>
+                <div class="summary-item"><span>Ganancia Neta del Mes:</span> <strong id="summary-net-profit"></strong></div>
+            </div>
+        `;
+        
+        updateFinancialSummary(monthYear);
+
+        document.getElementById('financial-form').addEventListener('submit', handleSaveClosing);
+        document.getElementById('financial-form').addEventListener('input', () => updateFinancialSummary(monthYear));
+    }
+
+    function updateFinancialSummary(monthYear) {
+        const form = document.getElementById('financial-form');
+        if (!form) return;
+
+        const monthlyOps = db.operations.filter(op => op.fecha.startsWith(monthYear));
+        const estimatedRevenue = monthlyOps.reduce((sum, op) => sum + (op.fotos_usadas * op.precio_foto_momento), 0);
+        
+        const actualCash = parseFloat(form.querySelector('#actual-cash').value) || 0;
+        const difference = actualCash - estimatedRevenue;
+
+        let totalExpenses = 0;
+        form.querySelectorAll('.expense-input').forEach(input => {
+            totalExpenses += parseFloat(input.value) || 0;
+        });
+        
+        const netProfit = actualCash - totalExpenses;
+
+        form.querySelector('#estimated-revenue').value = `$${estimatedRevenue.toLocaleString('es-AR')}`;
+        const diffEl = form.querySelector('#revenue-difference');
+        diffEl.value = `$${difference.toLocaleString('es-AR')}`;
+        diffEl.className = difference >= 0 ? 'profit' : 'loss';
+
+        document.getElementById('summary-total-expenses').textContent = `$${totalExpenses.toLocaleString('es-AR')}`;
+        const profitEl = document.getElementById('summary-net-profit');
+        profitEl.textContent = `$${netProfit.toLocaleString('es-AR')}`;
+        profitEl.className = netProfit >= 0 ? 'profit' : 'loss';
+    }
+
+    function handleSaveClosing(e) {
+        e.preventDefault();
+        const form = e.target;
+        const monthYear = form.dataset.month;
+
+        const closingData = {
+            actualCash: parseFloat(form.querySelector('#actual-cash').value) || 0,
+            expenses: {
+                alquiler: parseFloat(form.querySelector('#exp-alquiler').value) || 0,
+                insumos: parseFloat(form.querySelector('#exp-insumos').value) || 0,
+                viajes: parseFloat(form.querySelector('#exp-viajes').value) || 0,
+                seguros: parseFloat(form.querySelector('#exp-seguros').value) || 0,
+                extraordinario: parseFloat(form.querySelector('#exp-extraordinario').value) || 0,
+            }
+        };
+
+        db.monthlyClosings[monthYear] = closingData;
+        saveDB();
+        
+        const [year, month] = monthYear.split('-');
+        const monthName = new Date(year, month - 1).toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+        showMessage('closing-message', `Cierre de ${monthName} guardado con éxito.`, 'success');
+    }
+
+
+    // --- LÓGICA DE MODALES ---
+    
+    function setupModals() {
+        document.getElementById('btn-admin-show-cambiar-rollo').addEventListener('click', showCambiarRolloModal);
+        document.getElementById('btn-op-show-cambiar-rollo').addEventListener('click', showCambiarRolloModal);
+        document.getElementById('btn-show-nuevo-rollo').addEventListener('click', () => showModal('nuevoRollo'));
+
+        document.querySelectorAll('.modal .close-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => e.target.closest('.modal').style.display = 'none');
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+        });
+
+        document.getElementById('form-cambiar-rollo').addEventListener('submit', handleCambiarRollo);
+        document.getElementById('form-nuevo-rollo').addEventListener('submit', handleNuevoRollo);
+    }
+    
+    function showModal(modalName) {
+        if (modals[modalName]) modals[modalName].style.display = 'block';
+    }
+    
+    function showCambiarRolloModal() {
+        const rollInUse = db.rolls.find(r => r.estado === 'en_uso');
+        if (!rollInUse) {
+            alert('No hay un rollo en uso para cambiar.');
+            return;
+        }
+        
+        document.getElementById('modal-rollo-actual-nombre').textContent = rollInUse.nombre;
+        document.getElementById('fotos-finales-saliente').value = rollInUse.fotos_restantes;
+        
+        const select = document.getElementById('select-rollo-entrante');
+        select.innerHTML = '';
+        const stockRolls = db.rolls.filter(r => r.estado === 'stock');
+
+        if(stockRolls.length === 0){
+            select.innerHTML = `<option value="" disabled>No hay rollos en stock</option>`;
+        } else {
+             stockRolls.forEach(roll => {
+                select.innerHTML += `<option value="${roll.id}">${roll.nombre} (${roll.fotos_restantes} fotos)</option>`;
+            });
+        }
+        
+        showModal('cambiarRollo');
+    }
+
+    function handleCambiarRollo(e) {
+        e.preventDefault();
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        const rollOut = db.rolls.find(r => r.estado === 'en_uso');
+        const finalCount = parseInt(document.getElementById('fotos-finales-saliente').value);
+        const rollInId = parseInt(document.getElementById('select-rollo-entrante').value);
+        const rollIn = db.rolls.find(r => r.id === rollInId);
+
+        if (!rollOut || !rollIn) {
+            alert('Error: Debes seleccionar un rollo del stock para continuar.');
+            return;
+        }
+        
+        const photosUsed = rollOut.fotos_restantes - finalCount;
+        if (photosUsed > 0) {
+            db.operations.push({
+                id: db.nextOperationId++,
+                id_usuario: session.user.id,
+                id_rollo: rollOut.id,
+                tipo_operacion: 'cambio_rollo_sale',
+                fotos_usadas: photosUsed,
+                precio_foto_momento: db.config.precio_por_foto,
+                fecha: new Date().toISOString()
+            });
+        }
+        rollOut.fotos_restantes = finalCount;
+        rollOut.estado = (finalCount <= 10) ? 'gastado' : 'stock';
+        rollIn.estado = 'en_uso';
+        
+        saveDB();
+        alert('Cambio de rollo realizado con éxito.');
+        modals.cambiarRollo.style.display = 'none';
+        
+        if(session.user.rol === 'administrador') {
+            renderAdminDashboard();
+        } else {
+            renderOperatorDashboard();
+        }
+    }
+
+    function handleNuevoRollo(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('nuevo-rollo-nombre').value;
+        const fotos = parseInt(document.getElementById('nuevo-rollo-fotos').value);
+        const obs = document.getElementById('nuevo-rollo-obs').value;
+
+        if (!nombre || isNaN(fotos) || fotos <= 0) {
+            alert('Por favor, completa los campos correctamente.');
+            return;
+        }
+        
+        db.rolls.push({
+            id: db.nextRollId++,
+            nombre: nombre,
+            fotos_iniciales: fotos,
+            fotos_restantes: fotos,
+            estado: 'stock',
+            observaciones: obs
+        });
+        
+        saveDB();
+        alert('Nuevo rollo añadido al stock.');
+        modals.nuevoRollo.style.display = 'none';
+        document.getElementById('form-nuevo-rollo').reset();
+        renderAdminDashboard();
+    }
+
+    function showMessage(elementId, text, type) {
+        const el = document.getElementById(elementId);
+        el.textContent = text;
+        el.className = `message ${type}`;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    // --- INICIALIZACIÓN DE LA APP ---
+    function init() {
+        setupDatabase();
+        setupModals();
+        
+        loginForm.addEventListener('submit', handleLogin);
+        logoutBtns.forEach(btn => btn.addEventListener('click', handleLogout));
+
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY));
+        if (session && session.loggedin) {
+            navigateToDashboard(session.user.rol);
+        } else {
+            showPage('login');
+        }
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
